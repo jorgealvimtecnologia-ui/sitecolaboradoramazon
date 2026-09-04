@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+}
+
+/* Custom Amazon Styling */
+.amazon-btn-primary {
+  background: linear-gradient(to bottom, #ffd814, #f7ca00);
+  border: 1px solid #fcd200;
+  box-shadow: 0 2px 5px rgba(213, 217, 217, 0.5);
+  transition: all 0.15s ease-in-out;
+}
+.amazon-btn-primary:hover {
+  background: linear-gradient(to bottom, #f7ca00, #f0c14b);
+  border-color: #f2c200;
+}
+
+.amazon-btn-secondary {
+  background: linear-gradient(to bottom, #ffa41c, #ff8f00);
+  border: 1px solid #ff8f00;
+  box-shadow: 0 2px 5px rgba(213, 217, 217, 0.5);
+  transition: all 0.15s ease-in-out;
+}
+.amazon-btn-secondary:hover {
+  background: linear-gradient(to bottom, #ff8f00, #e67a00);
+}
+
+.amazon-badge-bestseller {
+  background-color: #e67a00;
+  color: #ffffff;
+  font-weight: 700;
+  position: relative;
+}
+.amazon-badge-bestseller::after {
+  content: "";
+  position: absolute;
+  right: -8px;
+  top: 0;
+  border-left: 8px solid #e67a00;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+}
+
+.amazon-badge-choice {
+  background-color: #232f3e;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
