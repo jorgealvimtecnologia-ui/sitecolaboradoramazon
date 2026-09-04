@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Plus, Trash2, Edit3, Download, Upload, RotateCcw, Check, Sparkles, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Plus, Trash2, Edit3, Download, Upload, RotateCcw, Check, Sparkles, BarChart2, TrendingUp, MousePointer, Clock, ExternalLink } from 'lucide-react';
 import { CATEGORIES } from '../data/categories';
 import { extractAsinFromUrl, formatCurrency } from '../utils/affiliateHelper';
 
@@ -12,8 +12,27 @@ export default function AdminProductModal({
   onImportProducts,
   onClose
 }) {
-  const [activeTab, setActiveTab] = useState('add'); // 'add', 'manage', 'backup'
+  const [activeTab, setActiveTab] = useState('add'); // 'add', 'manage', 'analytics', 'backup'
   const [editingId, setEditingId] = useState(null);
+
+  // Analytics state from Laravel
+  const [analytics, setAnalytics] = useState(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'analytics') {
+      setLoadingAnalytics(true);
+      fetch('/api/stats')
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            setAnalytics(data.analytics);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoadingAnalytics(false));
+    }
+  }, [activeTab]);
 
   // Form State
   const initialForm = {
@@ -118,10 +137,10 @@ export default function AdminProductModal({
 
     if (editingId) {
       onUpdateProduct(productPayload);
-      setSuccessMsg('Produto atualizado com sucesso!');
+      setSuccessMsg('Produto atualizado com sucesso no banco de dados!');
     } else {
       onAddProduct(productPayload);
-      setSuccessMsg('Produto adicionado com sucesso!');
+      setSuccessMsg('Produto salvo com sucesso no banco de dados!');
     }
 
     setFormData(initialForm);
@@ -133,7 +152,7 @@ export default function AdminProductModal({
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(products, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `catalogo-amazon-afiliados-${new Date().toISOString().slice(0, 10)}.json`);
+    downloadAnchor.setAttribute("download", `catalogo-amazon-laravel-${new Date().toISOString().slice(0, 10)}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -168,7 +187,7 @@ export default function AdminProductModal({
         <div className="p-4 bg-[#131921] text-white flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-[#febd69]" />
-            <h3 className="font-bold text-sm sm:text-base">Painel de Gerenciamento da Vitrine Amazon</h3>
+            <h3 className="font-bold text-sm sm:text-base">Painel de Gerenciamento da Vitrine (Laravel Backend)</h3>
           </div>
           <button
             onClick={onClose}
@@ -179,7 +198,7 @@ export default function AdminProductModal({
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex border-b border-gray-200 bg-gray-50 px-4 pt-2 gap-2 text-xs font-bold">
+        <div className="flex border-b border-gray-200 bg-gray-50 px-4 pt-2 gap-2 text-xs font-bold overflow-x-auto whitespace-nowrap">
           <button
             onClick={() => {
               setActiveTab('add');
@@ -202,7 +221,20 @@ export default function AdminProductModal({
                 : 'text-gray-600 hover:text-gray-900 border-transparent'
             }`}
           >
-            Gerenciar Catálogo ({products.length} itens)
+            Catálogo ({products.length} itens)
+          </button>
+
+          {/* Analytics Tab */}
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`py-2 px-4 rounded-t-lg transition-colors border-t border-x flex items-center gap-1.5 ${
+              activeTab === 'analytics'
+                ? 'bg-white text-[#007185] border-gray-200 -mb-px'
+                : 'text-gray-600 hover:text-gray-900 border-transparent'
+            }`}
+          >
+            <BarChart2 className="w-3.5 h-3.5 text-[#007185]" />
+            <span>Métricas & Cliques</span>
           </button>
 
           <button
@@ -444,7 +476,7 @@ export default function AdminProductModal({
                   type="submit"
                   className="amazon-btn-primary px-6 py-2.5 rounded-lg text-xs font-bold text-gray-900 shadow"
                 >
-                  {editingId ? 'Salvar Alterações' : 'Adicionar à Vitrine'}
+                  {editingId ? 'Salvar Alterações no Banco' : 'Salvar no Banco de Dados'}
                 </button>
               </div>
 
@@ -455,7 +487,7 @@ export default function AdminProductModal({
           {activeTab === 'manage' && (
             <div className="space-y-3">
               <div className="text-xs text-gray-500 mb-2">
-                Total de produtos cadastrados na sua vitrine: <strong>{products.length}</strong>
+                Total de produtos cadastrados no banco de dados: <strong>{products.length}</strong>
               </div>
 
               <div className="space-y-2 max-h-[500px] overflow-y-auto">
@@ -481,6 +513,9 @@ export default function AdminProductModal({
                           )}
                           <span>• {p.category}</span>
                           {p.isPrime && <span className="text-[#00a8e1] font-bold">Prime</span>}
+                          {p.clicksCount > 0 && (
+                            <span className="text-blue-700 font-semibold">• {p.clicksCount} cliques</span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -496,7 +531,7 @@ export default function AdminProductModal({
 
                       <button
                         onClick={() => {
-                          if (confirm(`Deseja realmente remover o produto "${p.title}"?`)) {
+                          if (confirm(`Deseja realmente remover o produto "${p.title}" do banco de dados?`)) {
                             onDeleteProduct(p.id);
                           }
                         }}
@@ -512,7 +547,117 @@ export default function AdminProductModal({
             </div>
           )}
 
-          {/* TAB 3: BACKUP / IMPORT / EXPORT */}
+          {/* TAB 3: LARAVEL ANALYTICS & CLICK STATS */}
+          {activeTab === 'analytics' && (
+            <div className="space-y-6">
+              {loadingAnalytics ? (
+                <div className="py-12 text-center text-xs text-gray-500">
+                  Carregando métricas do banco de dados Laravel...
+                </div>
+              ) : (
+                <>
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 p-4 rounded-xl border border-blue-200">
+                      <div className="flex items-center justify-between text-blue-800 mb-1">
+                        <span className="text-xs font-bold uppercase tracking-wider">Total de Cliques</span>
+                        <MousePointer className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="text-2xl font-black text-blue-950">
+                        {analytics?.total_clicks || 0}
+                      </div>
+                      <p className="text-[11px] text-blue-700 mt-1">Cliques redirecionados para a Amazon</p>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-green-50 to-green-100/50 p-4 rounded-xl border border-green-200">
+                      <div className="flex items-center justify-between text-green-800 mb-1">
+                        <span className="text-xs font-bold uppercase tracking-wider">Cliques Hoje</span>
+                        <TrendingUp className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="text-2xl font-black text-green-950">
+                        {analytics?.today_clicks || 0}
+                      </div>
+                      <p className="text-[11px] text-green-700 mt-1">Interações nas últimas 24 horas</p>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 p-4 rounded-xl border border-amber-200">
+                      <div className="flex items-center justify-between text-amber-800 mb-1">
+                        <span className="text-xs font-bold uppercase tracking-wider">Taxa de Conversão</span>
+                        <Sparkles className="w-4 h-4 text-amber-600" />
+                      </div>
+                      <div className="text-2xl font-black text-amber-950">
+                        {products.length > 0 ? `${Math.round(((analytics?.total_clicks || 0) / products.length) * 10)}%` : '0%'}
+                      </div>
+                      <p className="text-[11px] text-amber-700 mt-1">Engajamento médio por produto</p>
+                    </div>
+
+                  </div>
+
+                  {/* Top Clicked Products */}
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <h4 className="text-xs font-bold uppercase text-gray-800 tracking-wider mb-3 flex items-center gap-1.5">
+                      <TrendingUp className="w-4 h-4 text-[#e47911]" />
+                      <span>Produtos Mais Clicados pelos Visitantes</span>
+                    </h4>
+
+                    {analytics?.top_products && analytics.top_products.length > 0 ? (
+                      <div className="space-y-2">
+                        {analytics.top_products.map((p, idx) => (
+                          <div key={p.id} className="flex items-center justify-between bg-white p-2.5 rounded-lg border border-gray-200 text-xs">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span className="w-5 h-5 rounded-full bg-gray-100 font-bold text-gray-700 flex items-center justify-center shrink-0">
+                                {idx + 1}
+                              </span>
+                              <img src={p.image_url} alt="" className="w-8 h-8 object-contain shrink-0" />
+                              <span className="font-semibold text-gray-900 truncate max-w-xs">{p.title}</span>
+                            </div>
+                            <span className="font-bold text-[#e47911] shrink-0 bg-orange-50 px-2 py-0.5 rounded border border-orange-200">
+                              {p.clicks_count} cliques
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6 text-xs text-gray-500">
+                        Nenhum clique registrado ainda. Os cliques nos botões "Ver na Amazon" aparecerão aqui em tempo real!
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Recent Activity */}
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <h4 className="text-xs font-bold uppercase text-gray-800 tracking-wider mb-3 flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-gray-600" />
+                      <span>Histórico Recente de Cliques de Afiliados</span>
+                    </h4>
+
+                    {analytics?.recent_clicks && analytics.recent_clicks.length > 0 ? (
+                      <div className="space-y-1.5">
+                        {analytics.recent_clicks.map((c) => (
+                          <div key={c.id} className="flex items-center justify-between bg-white p-2 rounded border border-gray-200 text-[11px]">
+                            <div className="truncate text-gray-800 max-w-sm">
+                              <strong>{c.product_title}</strong> {c.product_asin && <span className="text-gray-400">({c.product_asin})</span>}
+                            </div>
+                            <div className="flex items-center gap-2 text-gray-500 shrink-0 font-mono">
+                              <span className="text-[#007185] font-semibold">{c.affiliate_tag}</span>
+                              <span>{new Date(c.created_at).toLocaleTimeString('pt-BR')}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 text-xs text-gray-500">
+                        Ainda não há registros recentes de cliques.
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* TAB 4: BACKUP / IMPORT / EXPORT */}
           {activeTab === 'backup' && (
             <div className="space-y-6">
               
@@ -521,7 +666,7 @@ export default function AdminProductModal({
                 <div>
                   <h4 className="text-sm font-bold text-gray-900">Exportar Catálogo em JSON</h4>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Faça o download de todos os {products.length} produtos da sua vitrine para manter um backup seguro.
+                    Faça o download de todos os {products.length} produtos do seu banco de dados Laravel para manter um backup seguro.
                   </p>
                 </div>
                 <button
@@ -558,7 +703,7 @@ export default function AdminProductModal({
                 <div>
                   <h4 className="text-sm font-bold text-red-900">Restaurar Catálogo Padrão Inicial</h4>
                   <p className="text-xs text-red-700 mt-0.5">
-                    Recarrega os mais de 12 produtos originais de alta conversão da Amazon Brasil.
+                    Recarrega os mais de 12 produtos originais de alta conversão da Amazon Brasil no banco de dados.
                   </p>
                 </div>
                 <button

@@ -10,7 +10,7 @@ export default function ProductQuickModal({
 }) {
   if (!product) return null;
 
-  const affiliateUrl = buildAffiliateUrl(product, affiliateTag);
+  const affiliateUrl = product.trackedUrl || buildAffiliateUrl(product, affiliateTag);
   const { whole, cents } = getPriceParts(product.price);
   const savings = product.originalPrice && product.originalPrice > product.price 
     ? product.originalPrice - product.price 

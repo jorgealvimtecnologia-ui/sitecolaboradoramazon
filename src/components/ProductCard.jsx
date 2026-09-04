@@ -8,7 +8,7 @@ export default function ProductCard({
   onOpenQuickView,
   onOpenWhatsApp
 }) {
-  const affiliateUrl = buildAffiliateUrl(product, affiliateTag);
+  const affiliateUrl = product.trackedUrl || buildAffiliateUrl(product, affiliateTag);
   const { whole, cents } = getPriceParts(product.price);
   const originalPriceFormatted = product.originalPrice ? formatCurrency(product.originalPrice) : null;
   const savingsAmount = product.originalPrice && product.originalPrice > product.price 

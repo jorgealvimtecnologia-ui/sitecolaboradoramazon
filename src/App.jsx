@@ -11,27 +11,13 @@ import AdminProductModal from './components/AdminProductModal';
 import Footer from './components/Footer';
 
 import { INITIAL_PRODUCTS } from './data/initialProducts';
-import { getAffiliateTag } from './utils/affiliateHelper';
+import { getAffiliateTag, setAffiliateTag } from './utils/affiliateHelper';
 
 export default function App() {
-  // Load products from localStorage or default
-  const [products, setProducts] = useState(() => {
-    try {
-      const saved = localStorage.getItem('amazon_products_catalog');
-      return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
-    } catch (e) {
-      return INITIAL_PRODUCTS;
-    }
-  });
-
-  // Save products to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('amazon_products_catalog', JSON.stringify(products));
-    } catch (e) {
-      console.error('Erro ao salvar produtos no localStorage:', e);
-    }
-  }, [products]);
+  // Load products: start with initial, then sync with Laravel API
+  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isBackendConnected, setIsBackendConnected] = useState(false);
 
   // Affiliate Tag State
   const [affiliateTag, setAffiliateTagState] = useState(() => getAffiliateTag());
@@ -47,7 +33,68 @@ export default function App() {
   const [isTagSettingsOpen, setIsTagSettingsOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
-  // Tab Filtering Handlers
+  // Fetch products and settings from Laravel API
+  const fetchProductsFromApi = async () => {
+    try {
+      const response = await fetch('/api/products');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === 'success' && data.products && data.products.length > 0) {
+          // Normalize API fields to camelCase if needed
+          const normalized = data.products.map(p => ({
+            id: p.id,
+            asin: p.asin,
+            title: p.title,
+            category: p.category,
+            price: Number(p.price),
+            originalPrice: p.original_price ? Number(p.original_price) : null,
+            discountPercentage: p.discount_percentage,
+            rating: Number(p.rating),
+            reviewsCount: p.reviews_count,
+            isPrime: Boolean(p.is_prime),
+            isBestSeller: Boolean(p.is_best_seller),
+            isChoice: Boolean(p.is_choice),
+            isLightningDeal: Boolean(p.is_lightning_deal),
+            dealClaimedPercentage: p.deal_claimed_percentage,
+            imageUrl: p.image_url,
+            amazonUrl: p.amazon_url,
+            trackedUrl: p.tracked_url,
+            features: Array.isArray(p.features) ? p.features : [],
+            description: p.description,
+            clicksCount: p.clicks_count || 0
+          }));
+          setProducts(normalized);
+          setIsBackendConnected(true);
+        }
+      }
+    } catch (e) {
+      console.log('Operando com catálogo local em cache');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchSettingsFromApi = async () => {
+    try {
+      const response = await fetch('/api/settings');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.settings?.affiliate_tag) {
+          setAffiliateTagState(data.settings.affiliate_tag);
+          setAffiliateTag(data.settings.affiliate_tag);
+        }
+      }
+    } catch (e) {
+      // Ignore fallback
+    }
+  };
+
+  useEffect(() => {
+    fetchProductsFromApi();
+    fetchSettingsFromApi();
+  }, []);
+
+  // Handlers for tabs
   const handleFilterLightningDeals = () => {
     setSelectedCategory('all');
     setSearchQuery('');
@@ -64,26 +111,105 @@ export default function App() {
     window.scrollTo({ top: 400, behavior: 'smooth' });
   };
 
-  // Admin Actions
-  const handleAddProduct = (newProduct) => {
+  // Admin Actions (with Laravel API persistence)
+  const handleAddProduct = async (newProduct) => {
     setProducts([newProduct, ...products]);
+
+    // Send to Laravel API
+    try {
+      await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          title: newProduct.title,
+          category: newProduct.category,
+          price: newProduct.price,
+          original_price: newProduct.originalPrice,
+          image_url: newProduct.imageUrl,
+          amazon_url: newProduct.amazonUrl,
+          asin: newProduct.asin,
+          rating: newProduct.rating,
+          reviews_count: newProduct.reviewsCount,
+          is_prime: newProduct.isPrime,
+          is_best_seller: newProduct.isBestSeller,
+          is_choice: newProduct.isChoice,
+          is_lightning_deal: newProduct.isLightningDeal,
+          features: newProduct.features,
+          description: newProduct.description
+        })
+      });
+      fetchProductsFromApi();
+    } catch (e) {
+      console.error('Erro ao salvar no Laravel:', e);
+    }
   };
 
-  const handleUpdateProduct = (updatedProduct) => {
+  const handleUpdateProduct = async (updatedProduct) => {
     setProducts(products.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+
+    try {
+      await fetch(`/api/products/${updatedProduct.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          title: updatedProduct.title,
+          category: updatedProduct.category,
+          price: updatedProduct.price,
+          original_price: updatedProduct.originalPrice,
+          image_url: updatedProduct.imageUrl,
+          amazon_url: updatedProduct.amazonUrl,
+          asin: updatedProduct.asin,
+          rating: updatedProduct.rating,
+          reviews_count: updatedProduct.reviewsCount,
+          is_prime: updatedProduct.isPrime,
+          is_best_seller: updatedProduct.isBestSeller,
+          is_choice: updatedProduct.isChoice,
+          is_lightning_deal: updatedProduct.isLightningDeal,
+          features: updatedProduct.features,
+          description: updatedProduct.description
+        })
+      });
+      fetchProductsFromApi();
+    } catch (e) {
+      console.error('Erro ao atualizar no Laravel:', e);
+    }
   };
 
-  const handleDeleteProduct = (productId) => {
+  const handleDeleteProduct = async (productId) => {
     setProducts(products.filter(p => p.id !== productId));
+
+    try {
+      await fetch(`/api/products/${productId}`, {
+        method: 'DELETE',
+        headers: { 'Accept': 'application/json' }
+      });
+    } catch (e) {
+      console.error('Erro ao deletar no Laravel:', e);
+    }
   };
 
   const handleResetToDefault = () => {
     setProducts(INITIAL_PRODUCTS);
-    localStorage.removeItem('amazon_products_catalog');
+    fetchProductsFromApi();
   };
 
   const handleImportProducts = (importedList) => {
     setProducts(importedList);
+  };
+
+  const handleSaveAffiliateTag = async (newTag) => {
+    setAffiliateTagState(newTag);
+    setAffiliateTag(newTag);
+
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ affiliate_tag: newTag })
+      });
+    } catch (e) {
+      // Ignorar fallback
+    }
   };
 
   return (
@@ -184,11 +310,11 @@ export default function App() {
         <AffiliateTagSettings
           currentTag={affiliateTag}
           onClose={() => setIsTagSettingsOpen(false)}
-          onSave={(newTag) => setAffiliateTagState(newTag)}
+          onSave={handleSaveAffiliateTag}
         />
       )}
 
-      {/* Admin Panel Modal */}
+      {/* Admin Panel Modal (with Laravel Analytics) */}
       {isAdminOpen && (
         <AdminProductModal
           products={products}

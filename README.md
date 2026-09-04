@@ -1,100 +1,89 @@
-# 🛒 Amazon Affiliate Storefront (Vitrine Oficial de Afiliado Amazon)
+# 🛒 Amazon Affiliate Storefront (Laravel + React Full Stack)
 
-Um site completo, ultra-rápido e responsivo de **Loja de Afiliados e Vitrine de Influenciador da Amazon**, desenvolvido com base nos modelos oficiais do **Amazon Influencer Program**, **Amazon SiteStripe** e **Amazon Deals & Best Sellers**.
+Um site completo, ultra-rápido e profissional de **Loja de Afiliados e Vitrine de Influenciador da Amazon**, agora potencializado com **Laravel 11/13 + SQLite** no backend e **React 18 + Tailwind CSS** no frontend.
 
 ![Amazon Affiliate Store](https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=1200&q=80)
 
 ---
 
-## ✨ Principais Funcionalidades
+## ✨ Principais Funcionalidades com Laravel
 
-### 1. 🎯 Modelos Oficiais da Amazon Replicados
-- **Amazon Influencer Storefront**: Perfil verificado com capa, avatar, biografia, contagem de achadinhos e botão de seguir vitrine.
+### 1. 🗄️ Banco de Dados Real e Centralizado (SQLite)
+- Todos os produtos, categorias, configurações e métricas ficam salvos no banco de dados do servidor (`database/database.sqlite`).
+- Qualquer alteração feita pelo painel fica disponível imediatamente para todos os visitantes.
+
+### 2. 📊 Rastreador Inteligente de Cliques & Conversões (Click Analytics)
+- Redirecionamento automático através da rota `/go/{id}`:
+  - Registra o clique, data/hora, IP e produto no banco de dados.
+  - Redireciona o visitante em milissegundos para a página da Amazon com a sua tag de afiliado ativa.
+- **Aba de Métricas no Painel**:
+  - Total de cliques gerados.
+  - Cliques de hoje.
+  - Top 5 produtos mais clicados pelos seus clientes.
+  - Histórico detalhado de cliques recentes.
+
+### 3. 🎯 Modelos Oficiais da Amazon Replicados
+- **Amazon Influencer Storefront**: Perfil oficial de criador com selo verificado, capa e avatar.
 - **Listas de Ideias da Amazon (Idea Lists)**: Coleções temáticas curadas (*Setup de Produtividade*, *Casa Inteligente & Alexa*, *Achadinhos até R$ 99*, *Livros & Kindle*).
-- **Ofertas Relâmpago (Lightning Deals)**: Cronômetro regressivo em tempo real, barra de progresso de resgate e selos chamativos de desconto.
-- **Cards de Produtos Fidedignos à Amazon**: Selo Prime, Mais Vendido, Escolha da Amazon, estrelas de avaliação, contagem de reviews, tipografia oficial de preços e botão de compra em gradiente amarelo/laranja oficial.
+- **Ofertas Relâmpago (Lightning Deals)**: Cronômetro regressivo em tempo real e barra de progresso.
+- **Cards de Produtos Oficiais**: Selo Prime, Mais Vendido, Escolha da Amazon, estrelas de avaliação e botão com gradiente oficial da Amazon.
 
-### 2. ⚡ Gerenciador Global de Tag de Afiliado
-- Permite configurar o seu **ID de Rastreamento (Tracking ID)** da Amazon (ex: `suatag-20`).
-- Atualiza instantaneamente todos os links de produtos, botões de compra e anúncios da loja para comissionar a sua conta da Amazon.
+### 4. ⚡ Gerenciador Global de Tag de Afiliado
+- Altere sua Tag de Associado (ex: `seunome-20`) pelo painel. O Laravel atualiza todos os links do sistema instantaneamente.
 
-### 3. 💬 Gerador de Promoções para WhatsApp e Telegram
-- Botão de 1 clique em qualquer produto para gerar mensagens promocionais prontas e formatadas com emojis, preços "De: Por:", selo Prime e link de afiliado.
-- Botão de envio direto para o WhatsApp.
-
-### 4. 🛠️ Painel Administrativo Embutido (Admin Local)
-- **Adicionar Novo Produto**: Cole a URL ou ASIN da Amazon para cadastro automático com cálculo de porcentagem de desconto.
-- **Gerenciador de Catálogo**: Edição e exclusão de produtos em tempo real com persistência no navegador (`localStorage`).
-- **Backup & Restauração**: Exporte todo o catálogo em `.json` ou importe backups a qualquer momento.
-- **Restauração Rápida**: Botão para restaurar os mais de 12 produtos originais de alta conversão.
-
-### 5. 📜 Conformidade com os Termos da Amazon (Compliance)
-- Rodapé com o aviso legal obrigatório do Programa de Associados da Amazon (*Amazon Operating Agreement*).
+### 5. 💬 Gerador de Promoções para WhatsApp e Telegram
+- Gera mensagens de divulgação prontas para grupos de promoções com 1 clique.
 
 ---
 
 ## 🚀 Como Executar Localmente
 
+### Opção 1: Iniciar o Servidor Full Stack com Laravel (Recomendado)
+
 ```bash
-# 1. Instalar as dependências (caso não tenha instalado)
-npm install
-
-# 2. Iniciar o servidor de desenvolvimento local
-npm run dev
-
-# 3. Gerar a versão de produção otimizada
-npm run build
-
-# 4. Pré-visualizar a versão de produção
-npm run preview
+# 1. Iniciar o servidor web do Laravel
+php artisan serve
 ```
 
-O site estará acessível em `http://localhost:3000`.
+Acesse o site completo em: **`http://localhost:8000`**
+
+### Opção 2: Modo de Desenvolvimento com Hot-Reload (React + Laravel)
+
+Em dois terminais separados:
+
+```bash
+# Terminal 1: Iniciar o backend Laravel
+php artisan serve
+
+# Terminal 2: Iniciar o frontend Vite com hot-reload
+npm run dev
+```
+
+O Vite (porta 3000) possui proxy automático que envia as requisições `/api` e `/go` diretamente para o Laravel (porta 8000).
 
 ---
 
-## 🌐 Como Publicar / Hospedar Gratuitamente
-
-Você pode hospedar este site em menos de 2 minutos em plataformas como **Vercel**, **Netlify** ou **GitHub Pages**:
-
-### Deploy na Vercel:
-1. Suba o repositório no seu GitHub.
-2. Acesse [vercel.com](https://vercel.com) e importe o repositório.
-3. O framework será detectado automaticamente como **Vite**.
-4. Clique em **Deploy**!
-
-### Deploy na Netlify:
-1. Arraste a pasta `dist` gerada por `npm run build` para o [Netlify Drop](https://app.netlify.com/drop).
-
----
-
-## 📁 Estrutura do Projeto
+## 📁 Estrutura de Arquivos
 
 ```
 sitecolaboradoramazon/
-├── package.json
-├── vite.config.js
-├── tailwind.config.js
-├── index.html
-├── src/
-│   ├── main.jsx
-│   ├── App.jsx
-│   ├── index.css
-│   ├── data/
-│   │   ├── categories.js           # Departamentos e Listas de Ideias
-│   │   └── initialProducts.js      # Catálogo de produtos populares no Brasil
-│   ├── components/
-│   │   ├── Header.jsx              # Cabeçalho com barra de busca e departamentos
-│   │   ├── InfluencerHero.jsx      # Perfil de Influencer / Vitrine
-│   │   ├── IdeaListsSection.jsx    # Coleções e Listas de Ideias
-│   │   ├── LightningDealsBar.jsx   # Ofertas relâmpago com cronômetro
-│   │   ├── ProductCard.jsx         # Card oficial de produto Amazon
-│   │   ├── ProductGrid.jsx         # Grade responsiva com filtros e ordenação
-│   │   ├── ProductQuickModal.jsx   # Visualização rápida de detalhes
-│   │   ├── WhatsAppModal.jsx       # Gerador de cópia para WhatsApp/Telegram
-│   │   ├── AffiliateTagSettings.jsx# Modal de configuração da Tag de Afiliado
-│   │   ├── AdminProductModal.jsx   # Painel de cadastro/edição de produtos
-│   │   └── Footer.jsx              # Rodapé com disclaimer oficial da Amazon
-│   └── utils/
-│       └── affiliateHelper.js      # Utilitários de link de afiliado, moedas e ASIN
+├── app/
+│   ├── Http/Controllers/
+│   │   ├── ProductController.php      # API de listagem, busca e CRUD de produtos
+│   │   ├── ClickController.php        # Redirecionamento /go/{id} e Analytics de cliques
+│   │   └── SettingController.php      # Configurações de Tag e loja
+│   └── Models/
+│       ├── Product.php                # Modelo de Produto da Amazon
+│       ├── Category.php               # Departamentos e Listas de Ideias
+│       ├── AffiliateClick.php         # Registro de cliques de afiliados
+│       └── Setting.php                # Configurações dinâmicas
+├── database/
+│   ├── database.sqlite                # Banco de dados SQLite portátil
+│   ├── migrations/                    # Tabelas do banco
+│   └── seeders/DatabaseSeeder.php     # Produtos iniciais da Amazon pré-carregados
+├── routes/
+│   ├── api.php                        # Endpoints da API REST
+│   └── web.php                        # Rota de redirecionamento /go/{id} e SPA
+├── resources/views/app.blade.php      # Layout Blade com integração Vite
+└── src/                               # Componentes React oficiais da Amazon
 ```

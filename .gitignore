@@ -12,6 +12,17 @@ dist
 dist-ssr
 *.local
 
+# Laravel ignores
+/vendor
+.env
+.env.backup
+.env.production
+.phpunit.result.cache
+/storage/*.key
+
+# SQLite database files
+database/database.sqlite-journal
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
